@@ -1,0 +1,286 @@
+/* Image Viewer Styles - Advanced Gallery Viewer */
+
+#image-viewer {
+    position: fixed;
+    inset: 0;
+    background: #000000;
+    /* Solid opaque background */
+    z-index: var(--z-modal);
+    display: none;
+    align-items: center;
+    /* Center main content */
+    justify-content: center;
+}
+
+/* Viewer Buttons - Base Style */
+.viewer-btn {
+    position: absolute;
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease, opacity 0.3s ease;
+    z-index: 20;
+    font-size: 1.1rem;
+}
+
+.viewer-btn:hover {
+    background: rgba(59, 130, 246, 0.9);
+    border-color: rgba(59, 130, 246, 1);
+    transform: scale(1.1);
+}
+
+.viewer-btn:active {
+    transform: scale(0.95);
+}
+
+/* Hide Nav and Action buttons by default */
+.viewer-nav-btn,
+.viewer-actions-top {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Show them only when strip is visible */
+#image-viewer.strip-visible .viewer-nav-btn,
+#image-viewer.strip-visible .viewer-actions-top {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Close Button - ALWAYS visible */
+.viewer-btn-close {
+    top: 20px;
+    right: 20px;
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    opacity: 1 !important;
+    /* Force visible */
+    pointer-events: auto !important;
+}
+
+.viewer-btn-close:hover {
+    background: rgba(239, 68, 68, 0.9);
+    border-color: rgba(239, 68, 68, 1);
+}
+
+/* Top Left Action Buttons */
+.viewer-actions-top {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 12px;
+    z-index: 20;
+}
+
+.viewer-btn-action {
+    position: relative;
+}
+
+/* Navigation Arrows */
+.viewer-nav-btn {
+    width: 54px;
+    height: 54px;
+    font-size: 1.3rem;
+    z-index: 20;
+}
+
+.viewer-nav-left {
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.viewer-nav-left:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.viewer-nav-left:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.viewer-nav-right {
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.viewer-nav-right:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.viewer-nav-right:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+/* Main Image */
+/* Main Image */
+/* Main Image */
+#image-viewer #viewer-img {
+    width: auto;
+    height: auto;
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    border-radius: 12px;
+    /* Restored Curve */
+    box-shadow: none;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* Transition layout changes */
+    position: relative;
+    /* Changed from absolute to play nice with flex centering */
+    pointer-events: auto;
+}
+
+/* Shrink image when strip is visible to make room */
+#image-viewer.strip-visible #viewer-img {
+    max-height: calc(100vh - 160px);
+    /* Leave room for strip (80px) + top actions (80px) */
+    margin-top: 0;
+}
+
+/* Keep the image centered when the thumbnail strip is visible */
+#image-viewer.strip-visible {
+    align-items: center;
+    justify-content: center;
+}
+
+/* Thumbnail Strip */
+#viewer-thumbnail-strip {
+    position: absolute;
+    bottom: -100px;
+    /* Hidden initially */
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    /* Center items if few */
+    gap: 5px;
+    padding: 8px;
+    background: transparent;
+    backdrop-filter: none;
+    border: none;
+    width: 100%;
+    /* Full width */
+    max-width: 100%;
+    overflow-x: auto;
+    /* Scrollable horizontal */
+    overflow-y: hidden;
+    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 15;
+    align-items: center;
+
+    /* Hide scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#viewer-thumbnail-strip::-webkit-scrollbar {
+    display: none;
+}
+
+#viewer-thumbnail-strip.visible {
+    bottom: 0;
+    /* Stick to bottom */
+}
+
+/* Thumbnail Item */
+.viewer-thumb {
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    background: transparent;
+    position: relative;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.viewer-thumb:hover {
+    transform: translateY(-2px);
+}
+
+.viewer-thumb.active {
+    transform: scale(1.05);
+}
+
+.viewer-thumb::after {
+    display: none;
+}
+
+/* Image inside thumb */
+.viewer-thumb img {
+    height: 60px;
+    /* Fixed strip height */
+    width: auto;
+    display: block;
+    object-fit: contain;
+    border-radius: 6px;
+    /* Reduced Curve */
+    border: 2px solid transparent;
+    box-sizing: content-box;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.viewer-thumb.active img {
+    border-color: #3b82f6;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .viewer-nav-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+    }
+
+    .viewer-nav-left {
+        left: 10px;
+    }
+
+    .viewer-nav-right {
+        right: 10px;
+    }
+
+    .viewer-actions-top {
+        top: 15px;
+        left: 15px;
+        gap: 8px;
+    }
+
+    .viewer-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .viewer-thumb img {
+        height: 50px;
+    }
+}
+
+/* Theme Overrides - Ensure Solid Background */
+[data-theme="dark"] #image-viewer,
+[data-theme="light"] #image-viewer {
+    background: #000000 !important;
+}
+
+[data-theme="light"] .viewer-nav-btn,
+[data-theme="light"] .viewer-actions-top {
+    /* Ensure opacity transition works in light mode too */
+    transition: opacity 0.3s ease;
+}

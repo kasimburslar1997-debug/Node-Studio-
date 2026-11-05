@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f0f10">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>لوحة الملاحظات - النظام الموحد</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons: مسار محلي + محمل احتياطي فوري من الـ CDN لضمان ظهور كل الأيقونات دائماً -->
+    <script src="asset/icons/node_modules/lucide/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+        .lucide {
+            width: 1.15em;
+            height: 1.15em;
+            vertical-align: middle;
+            stroke: currentColor;
+            stroke-width: 2;
+            display: inline-block;
+        }
+    </style>
+
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components/node.css">
+    <link rel="stylesheet" href="css/components/text-node.css">
+    <link rel="stylesheet" href="css/components/ui.css">
+    <link rel="stylesheet" href="css/components/drawing.css">
+    <link rel="stylesheet" href="css/components/image.css">
+    <link rel="stylesheet" href="css/components/image-viewer.css">
+    <link rel="stylesheet" href="css/components/folder.css">
+    <link rel="stylesheet" href="css/components/sprite-editor.css">
+    <link rel="stylesheet" href="css/components/empty-node.css">
+    <link rel="stylesheet" href="css/new-styles.css">
+    <link rel="stylesheet" href="css/components/container.css">
+    <link rel="stylesheet" href="css/components/properties-panel.css">
+    <link rel="stylesheet" href="css/components/capsule-input.css">
+    <link rel="stylesheet" href="css/components/number-node.css">
+
+    <style>
+        .node.flex-width-fill {
+            width: 100% !important;
+            flex-grow: 1;
+            flex-basis: 0;
+        }
+
+        .node.flex-width-hug {
+            width: fit-content !important;
+            max-width: 100%;
+        }
+
+        .node.flex-width-fixed {
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+
+        .node.flex-height-fill {
+            height: 100% !important;
+            align-self: stretch;
+        }
+
+        .node.flex-height-hug {
+            height: fit-content !important;
+        }
+
+        .node.flex-height-fixed {
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+    <div id="infinite-bg"></div>
+    <div id="viewport">
+        <div id="canvas-content"></div>
+    </div>
+    <div id="tooltip"></div>
+
+    <div id="ui-layout-container">
+        <!-- Top Bar -->
+        <div id="top-bar-container">
+            <button id="settings-btn" class="icon-btn" onclick="App.toggleSettings()" data-tooltip="الإعدادات">
+                <i data-lucide="more-horizontal"></i>
+            </button>
+            <div id="breadcrumbs">
+                <span class="icon-btn" style="width:auto;font-size:.9rem;padding:0 5px" onclick="App.navHome()"
+                    data-tooltip="الرئيسية">
+                    <i data-lucide="home"></i>
+                </span>
+            </div>
+        </div>
+
+        <!-- Middle (Sidebar) -->
+        <div id="middle-container">
+            <div id="sidebar">
+                <div id="sidebar-tools">
+                    <button class="icon-btn" onclick="App.createNode('text')" data-tooltip="نص" draggable="true"
+                        data-node-type="text"><i data-lucide="type"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('text-with-title')" data-tooltip="نص بعنوان"
+                        draggable="true" data-node-type="text-with-title"><i data-lucide="file-text"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('code')" data-tooltip="كود برمجي" draggable="true"
+                        data-node-type="code"><i data-lucide="code"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('image')" data-tooltip="صورة" draggable="true"
+                        data-node-type="image"><i data-lucide="image"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('video')" data-tooltip="فيديو" draggable="true"
+                        data-node-type="video"><i data-lucide="video"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('sprite')" data-tooltip="شريحة 9-Slice"
+                        draggable="true" data-node-type="sprite"><i data-lucide="grid-3x3"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('drawing')" data-tooltip="لوحة رسم"
+                        draggable="true" data-node-type="drawing"><i data-lucide="brush"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('folder')" data-tooltip="مجلد / تجميع"
+                        draggable="true" data-node-type="folder"><i data-lucide="folder-plus"></i></button>
+                    <div class="divider"></div>
+                    <button class="icon-btn" onclick="App.createNode('empty')" data-tooltip="عقدة فارغة"
+                        draggable="true" data-node-type="empty"><i data-lucide="circle"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('icon')" data-tooltip="أيقونة" draggable="true"
+                        data-node-type="icon"><i data-lucide="star"></i></button>
+                    <button class="icon-btn" onclick="App.createNode('number')" data-tooltip="رقم" draggable="true"
+                        data-node-type="number"><i data-lucide="hash"></i></button>
+                </div>
+                <div class="divider" id="sidebar-divider-bottom" style="width: 20px; height: 1px; margin: 5px 0;"></div>
+
+                <button id="sidebar-more-btn" class="icon-btn" onclick="App.toggleSidebarPopup()" data-tooltip="المزيد"
+                    style="margin-top: auto; display: flex;">
+                    <i data-lucide="more-horizontal"></i>
+                </button>
+            </div>
+
+            <div id="sidebar-extra-popup" class="floating-popup" style="display:none;">
+                <div id="sidebar-overflow-tools" style="display:flex; flex-direction:column; gap:8px; width:100%;">
+                </div>
+                <div id="sidebar-popup-divider" class="divider"
+                    style="width:100%; height:1px; margin:5px 0; display:none;"></div>
+                <div id="sidebar-extra-items" style="display:flex; flex-direction:column; gap:8px; width:100%;"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div id="bottom-bar-container">
+            <div id="undo-panel-inner">
+                <button class="icon-btn" onclick="App.undo()" data-tooltip="تراجع"><i data-lucide="undo"></i></button>
+                <button class="icon-btn" onclick="App.redo()" data-tooltip="إعادة"><i data-lucide="redo"></i></button>
+            </div>
+            <div id="zoom-panel-inner">
+                <button class="icon-btn" onclick="App.resetView()" data-tooltip="توسيط"><i
+                        data-lucide="crosshair"></i></button>
+                <div class="divider"></div>
+                <button class="icon-btn" onclick="App.zoom(-.1)"><i data-lucide="minus"></i></button>
+                <span id="zoom-label" style="font-size:.9rem;min-width:40px;text-align:center">100%</span>
+                <button class="icon-btn" onclick="App.zoom(.1)"><i data-lucide="plus"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Menu -->
+    <div id="settings-menu">
+        <div class="menu-item" id="magnet-toggle" onclick="App.toggleMagnet()">
+            <span><i data-lucide="magnet"></i> مغناطيس</span><i data-lucide="toggle-left" id="magnet-icon"></i>
+        </div>
+        <div class="menu-item" id="theme-toggle" onclick="App.toggleTheme()">
+            <span><i data-lucide="moon"></i> الوضع</span><span id="theme-text">داكن</span>
+        </div>
+
+        <div style="padding: 10px 15px; border-bottom: 1px solid var(--border-color);">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">إدارة الوسائط والتخزين
+                المحلي</div>
+            <div class="menu-item" onclick="App.assetManager.showLinksManagerModal()">
+                <span><i data-lucide="link"></i> مدير روابط الوسائط (Adobe Links)</span>
+            </div>
+            <div class="menu-item" onclick="App.persistenceManager.showProjectsManager()">
+                <span><i data-lucide="database"></i> مدير المشاريع</span>
+            </div>
+            <div class="menu-item" onclick="App.persistenceManager.promptSelectDirectory()">
+                <span><i data-lucide="folder-cog"></i> تعيين مجلد التخزين على التابلت</span>
+            </div>
+            <div class="menu-item" onclick="App.persistenceManager.exportActiveProjectPackage()">
+                <span><i data-lucide="download"></i> تصدير حزمة المشروع (.agp)</span>
+            </div>
+            <div class="menu-item" onclick="document.getElementById('import-project-file').click()">
+                <span><i data-lucide="upload"></i> استيراد حزمة (.agp)</span>
+            </div>
+        </div>
+
+        <div class="menu-item" onclick="App.openWorkspaceSettings()">
+            <span><i data-lucide="sliders-horizontal"></i> تخصيص المساحة</span>
+        </div>
+    </div>
+
+    <!-- Workspace Settings Modal -->
+    <div id="workspace-settings"
+        style="display:none; position:fixed; inset:0; z-index:9100; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px);">
+        <div class="modal-panel"
+            style="width: 320px; background: rgba(18, 18, 18, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius:18px; padding:18px;">
+            <div class="modal-header"
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="font-size: 1rem; margin:0;">تخصيص المساحة</h3>
+                <button class="icon-btn" onclick="document.getElementById('workspace-settings').style.display='none'"><i
+                        data-lucide="x"></i></button>
+            </div>
+            <div class="setting-group" style="margin-bottom:15px;">
+                <label class="setting-label"
+                    style="display:block; margin-bottom:8px; font-size:0.85rem; color:var(--text-secondary);">نوع
+                    الشبكة</label>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-secondary grid-type-btn" style="flex:1; padding:6px;"
+                        onclick="App.setGridType('dots')">نقاط</button>
+                    <button class="btn btn-secondary grid-type-btn" style="flex:1; padding:6px;"
+                        onclick="App.setGridType('lines')">خطوط</button>
+                    <button class="btn btn-secondary grid-type-btn" style="flex:1; padding:6px;"
+                        onclick="App.setGridType('none')">إخفاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Links Manager Modal -->
+    <div id="asset-links-modal" class="modal-overlay"
+        style="display:none; justify-content:center; align-items:center; z-index:9500; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px);">
+        <div class="modal-panel"
+            style="width: 650px; max-width: 95vw; max-height: 85vh; display:flex; flex-direction:column; background:rgba(25, 25, 25, 0.95); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:20px; color:var(--text-primary); direction:rtl;">
+            <div class="modal-header"
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="link-2" style="color:var(--accent-color); width:20px; height:20px;"></i>
+                    <h3 style="font-size:1.15rem; font-weight:600; margin:0;">مدير روابط الوسائط (Asset Links Manager)
+                    </h3>
+                </div>
+                <button class="icon-btn" onclick="App.assetManager.hideLinksManagerModal()"><i
+                        data-lucide="x"></i></button>
+            </div>
+
+            <div id="asset-links-list"
+                style="flex:1; overflow-y:auto; min-height:220px; max-height:45vh; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:10px; scrollbar-width:thin;">
+            </div>
+
+            <div class="modal-footer"
+                style="border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:16px; display:flex; justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="App.assetManager.hideLinksManagerModal()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Local Database & Storage Manager Modal -->
+    <div id="projects-modal" class="modal-overlay"
+        style="display:none; justify-content:center; align-items:center; z-index:9000; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px);">
+        <div class="modal-panel"
+            style="width: 600px; max-width: 95vw; max-height: 85vh; display:flex; flex-direction:column; background:rgba(25, 25, 25, 0.95); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:20px; color:var(--text-primary); direction:rtl;">
+            <div class="modal-header"
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="database" style="color:var(--accent-color); width:20px; height:20px;"></i>
+                    <h3 style="font-size:1.15rem; font-weight:600; margin:0;">مدير المشاريع والمجلدات المحلية</h3>
+                </div>
+                <button class="icon-btn" onclick="App.persistenceManager.hideProjectsManager()"><i
+                        data-lucide="x"></i></button>
+            </div>
+
+            <div id="active-dir-name-display"
+                style="background:rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:0.85rem; color:var(--accent-color);">
+                جاري فحص المجلد...
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center; flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="App.persistenceManager.promptNewProject()"
+                    style="display:flex; align-items:center; gap:6px; font-size:0.85rem; padding:8px 14px; border-radius:8px; cursor:pointer;">
+                    <i data-lucide="plus-circle" style="width:16px; height:16px;"></i> مشروع جديد
+                </button>
+                <button class="btn" onclick="App.persistenceManager.promptSelectDirectory()"
+                    style="display:flex; align-items:center; gap:6px; font-size:0.85rem; padding:8px 14px; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary);">
+                    <i data-lucide="folder" style="width:16px; height:16px;"></i> تعيين مجلد في الجهاز
+                </button>
+                <button class="btn" onclick="document.getElementById('import-project-file').click()"
+                    style="display:flex; align-items:center; gap:6px; font-size:0.85rem; padding:8px 14px; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); margin-right:auto;">
+                    <i data-lucide="import" style="width:16px; height:16px;"></i> استيراد .agp
+                </button>
+                <input type="file" id="import-project-file" hidden accept=".json,.agp"
+                    onchange="App.persistenceManager.handleImportFile(this)">
+            </div>
+
+            <div id="projects-list-container"
+                style="flex:1; overflow-y:auto; min-height:200px; max-height:40vh; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:10px; scrollbar-width:thin;">
+            </div>
+
+            <div class="modal-footer"
+                style="border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:16px; display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+                <div>
+                    <span>المشروع الحالي: </span>
+                    <span id="active-project-name-display" style="font-weight:600; color:var(--accent-color);">مشروع
+                        تابلت</span>
+                </div>
+                <button class="btn btn-secondary" onclick="App.persistenceManager.hideProjectsManager()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Node Toolbar -->
+    <div id="node-toolbar" class="floating-panel">
+        <div id="toolbar-main" style="display:flex;gap:8px;flex-direction:row-reverse;align-items:center">
+            <button class="icon-btn" id="btn-text-color" onmousedown="event.preventDefault()"
+                onclick="App.showColors('text')" data-tooltip="لون النص"><i data-lucide="palette"></i></button>
+            <div class="divider" id="divider-colors"></div>
+            <button class="icon-btn" id="btn-edit" onmousedown="event.preventDefault()" onclick="App.toggleEditing()"
+                data-tooltip="تحرير" style="display:none"><i data-lucide="pen"></i></button>
+            <button class="icon-btn" id="btn-rename-folder" onmousedown="event.preventDefault()"
+                onclick="App.renameFolder()" data-tooltip="تغيير العنوان" style="display:none"><i
+                    data-lucide="pen"></i></button>
+            <button class="icon-btn" id="btn-change-image" onmousedown="event.preventDefault()"
+                onclick="App.triggerUpload(Array.from(App.selected)[0] || App.state.focusedNode)"
+                data-tooltip="تغيير الوسيط" style="display:none"><i data-lucide="image"></i></button>
+            <button class="icon-btn" id="btn-sprite-edit" onmousedown="event.preventDefault()"
+                onclick="App.spriteEditor.open(Array.from(App.selected)[0] || App.state.focusedNode)"
+                data-tooltip="تعديل الشريحة" style="display:none"><i data-lucide="grid-3x3"></i></button>
+            <button class="icon-btn" id="btn-image-edit" onmousedown="event.preventDefault()"
+                onclick="App.toggleImageEditMode()" data-tooltip="ترتيب الصور" style="display:none"><i
+                    data-lucide="pen"></i></button>
+            <button class="icon-btn" id="btn-create-container" onmousedown="event.preventDefault()"
+                onclick="App.createContainerFromSelection()" data-tooltip="إنشاء حاوية" style="display:none"><i
+                    data-lucide="layout-template"></i></button>
+            <button class="icon-btn" id="btn-layout-vertical" onmousedown="event.preventDefault()"
+                onclick="App.setContainerLayout('vertical')" data-tooltip="تخطيط عمودي" style="display:none"><i
+                    data-lucide="arrow-down"></i></button>
+            <button class="icon-btn" id="btn-layout-horizontal" onmousedown="event.preventDefault()"
+                onclick="App.setContainerLayout('horizontal')" data-tooltip="تخطيط أفقي" style="display:none"><i
+                    data-lucide="arrow-right"></i></button>
+            <button class="icon-btn" id="btn-layout-settings" onmousedown="event.preventDefault()"
+                onclick="App.showLayoutSettings()" data-tooltip="إعدادات التخطيط" style="display:none"><i
+                    data-lucide="layout"></i></button>
+            <div class="divider" id="divider-edit" style="display:none"></div>
+            <button class="icon-btn" id="btn-fill-color" onmousedown="event.preventDefault()"
+                onclick="App.showColors('fill')" data-tooltip="لون الخلفية"><i data-lucide="paint-bucket"></i></button>
+            <button class="icon-btn" onmousedown="event.preventDefault()" onclick="App.showStrokeSettings()"
+                data-tooltip="الحدود"><i data-lucide="square"></i></button>
+            <button class="icon-btn" id="lock-btn" onmousedown="event.preventDefault()" onclick="App.toggleLock()"
+                data-tooltip="قفل/فتح"><i data-lucide="unlock"></i></button>
+            <button class="icon-btn" onmousedown="event.preventDefault()" onclick="App.duplicateSelection()"
+                data-tooltip="تكرار"><i data-lucide="copy"></i></button>
+            <button class="icon-btn" id="btn-extract-from-container" onmousedown="event.preventDefault()"
+                onclick="App.extractFromContainer()" data-tooltip="إخراج من الحاوية" style="display:none"><i
+                    data-lucide="corner-left-up"></i></button>
+            <button class="icon-btn danger" onmousedown="event.preventDefault()" onclick="App.deleteSelection()"
+                data-tooltip="حذف"><i data-lucide="trash-2"></i></button>
+            <button class="icon-btn" onmousedown="event.preventDefault()" onclick="App.showNodeSettings()"
+                data-tooltip="إعدادات"><i data-lucide="settings"></i></button>
+        </div>
+
+        <!-- Formatting Toolbar -->
+        <div id="toolbar-formatting"
+            style="display:none;gap:8px;align-items:center;min-width:320px;padding:8px 12px;background:var(--glass-bg);backdrop-filter:var(--glass-blur);border-radius:12px;box-shadow:var(--shadow-floating);pointer-events:auto">
+            <button class="icon-btn" onclick="App.hideFormattingToolbar()"><i data-lucide="arrow-right"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn" id="color-format-btn" onmousedown="event.preventDefault()"
+                onclick="App.toggleTextColorPicker()" data-tooltip="لون النص">
+                <div id="text-color-indicator"
+                    style="width:14px;height:14px;background:var(--text-primary);border-radius:50%;border:1px solid var(--border-color)">
+                </div>
+            </button>
+            <div class="divider"></div>
+            <button class="icon-btn" id="heading-selector-btn" onmousedown="event.preventDefault()"
+                onclick="App.showHeadingSelector()" data-tooltip="العناوين"
+                style="width:auto;padding:0 10px;font-size:0.9rem;font-weight:700">H</button>
+            <div class="divider"></div>
+            <button class="icon-btn" onmousedown="event.preventDefault()" onclick="App.applyFormat('bold')"
+                data-tooltip="غامق"><i data-lucide="bold"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn" onmousedown="event.preventDefault()"
+                onclick="App.applyFormat('insertUnorderedList')" data-tooltip="قائمة نقطية"><i
+                    data-lucide="list"></i></button>
+            <button class="icon-btn" onmousedown="event.preventDefault()" onclick="App.applyFormat('insertOrderedList')"
+                data-tooltip="قائمة رقمية"><i data-lucide="list-ordered"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn" onmousedown="event.preventDefault()" onclick="App.applyFormat('justifyRight')"
+                data-tooltip="يمين"><i data-lucide="align-right"></i></button>
+            <button class="icon-btn" onmousedown="event.preventDefault()" onclick="App.applyFormat('justifyCenter')"
+                data-tooltip="وسط"><i data-lucide="align-center"></i></button>
+            <button class="icon-btn" onmousedown="event.preventDefault()" onclick="App.applyFormat('justifyLeft')"
+                data-tooltip="يسار"><i data-lucide="align-left"></i></button>
+
+            <div id="text-color-picker" class="popup-panel"
+                style="display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:10px;padding:8px;gap:6px;grid-template-columns:repeat(5,1fr)">
+                <div class="color-dot" style="background:#000000" onclick="App.applyTextColor('#000000')"></div>
+                <div class="color-dot" style="background:#ef4444" onclick="App.applyTextColor('#ef4444')"></div>
+                <div class="color-dot" style="background:#22c55e" onclick="App.applyTextColor('#22c55e')"></div>
+                <div class="color-dot" style="background:#3b82f6" onclick="App.applyTextColor('#3b82f6')"></div>
+                <div class="color-dot" style="background:#fbbf24" onclick="App.applyTextColor('#fbbf24')"></div>
+                <div class="color-dot" style="background:#ffffff;border:1px solid #ccc"
+                    onclick="App.applyTextColor('#ffffff')"></div>
+                <button class="icon-btn" style="grid-column:span 5;width:100%;justify-content:center;height:24px"
+                    onclick="App.applyTextColor('inherit')">إزالة اللون</button>
+            </div>
+        </div>
+
+        <!-- Node Settings View -->
+        <div id="toolbar-node-settings" style="display:none;gap:10px;align-items:center;min-width:200px">
+            <button class="icon-btn" onclick="App.showMainToolbar()"><i data-lucide="arrow-right"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn" onclick="App.handleFolderButton()" data-tooltip="تجميع في مجلد"><i
+                    data-lucide="folder-plus"></i></button>
+            <button class="icon-btn" onclick="App.extractSelection()" data-tooltip="إخراج من المجلد"><i
+                    data-lucide="corner-left-up"></i></button>
+        </div>
+
+        <!-- Stroke Settings View -->
+        <div id="toolbar-stroke" style="display:none;gap:10px;align-items:center;min-width:300px">
+            <button class="icon-btn" onclick="App.showMainToolbar()"><i data-lucide="arrow-right"></i></button>
+            <div class="divider"></div>
+            <div id="stroke-opacity-input" data-capsule-input data-value="1" data-min="0" data-max="1" data-step="0.1"
+                data-precision="1" data-tooltip="شفافية الحدود"></div>
+            <div class="divider"></div>
+            <div id="stroke-width-input" data-capsule-input data-value="0" data-min="0" data-max="10" data-step="1"
+                data-unit="px" data-tooltip="عرض الحدود"></div>
+            <div class="divider"></div>
+            <div id="curve-radius-input" data-capsule-input data-value="16" data-min="0" data-max="50" data-step="1"
+                data-unit="px" data-tooltip="انحناء الزوايا"></div>
+        </div>
+
+        <!-- Color Presets Toolbar -->
+        <div id="toolbar-color-presets" style="display:none;gap:10px;align-items:center;min-width:450px">
+            <button class="icon-btn" onclick="App.hideColorPicker()"><i data-lucide="arrow-right"></i></button>
+            <div class="divider"></div>
+            <div class="color-preset" style="background:#ffffff" onclick="App.applyPresetColor('#ffffff')"></div>
+            <div class="color-preset" style="background:#22c55e" onclick="App.applyPresetColor('#22c55e')"></div>
+            <div class="color-preset" style="background:#3b82f6" onclick="App.applyPresetColor('#3b82f6')"></div>
+            <div class="color-preset" style="background:#ef4444" onclick="App.applyPresetColor('#ef4444')"></div>
+            <div class="color-preset" style="background:#fbbf24" onclick="App.applyPresetColor('#fbbf24')"></div>
+            <div class="color-preset" style="background:#a855f7" onclick="App.applyPresetColor('#a855f7')"></div>
+        </div>
+
+        <!-- Custom Color Toolbar -->
+        <div id="toolbar-custom-color" style="display:none;gap:10px;align-items:center;">
+            <button class="icon-btn" onclick="App.confirmCustomColor()" style="background:#22c55e;color:white"><i
+                    data-lucide="check"></i></button>
+            <div id="hsb-slider" data-capsule-input data-value="0" data-min="0" data-max="360" data-step="5"
+                class="color-slider"></div>
+            <div id="custom-color-preview"
+                style="width:32px;height:32px;border-radius:50%;border:2px solid #444;background:#ffffff"></div>
+            <button class="icon-btn" onclick="App.backToColorPresets()"><i data-lucide="arrow-right"></i></button>
+        </div>
+
+        <!-- Container Property Panel -->
+        <div id="toolbar-container" style="display:none;gap:4px;padding:4px 8px;align-items:center;flex-wrap:nowrap;">
+            <button class="icon-btn" onclick="App.showMainToolbar()"><i data-lucide="arrow-right"></i></button>
+            <div class="divider"></div>
+            <div class="display-mode-group">
+                <button class="display-mode-btn" id="btn-dir-horizontal" onclick="App.setContainerMode('horizontal')"><i
+                        data-lucide="arrow-right"></i></button>
+                <button class="display-mode-btn" id="btn-dir-vertical" onclick="App.setContainerMode('vertical')"><i
+                        data-lucide="arrow-down"></i></button>
+                <button class="display-mode-btn" id="btn-dir-wrap" onclick="App.setContainerMode('wrap')"><i
+                        data-lucide="layout-grid"></i></button>
+            </div>
+            <div class="divider"></div>
+            <select id="select-width-mode" class="compact-select" onchange="App.setFlexMode('width', this.value)">
+                <option value="fixed">ثابت</option>
+                <option value="hug">احتواء</option>
+                <option value="fill">مليء</option>
+            </select>
+            <select id="select-height-mode" class="compact-select" onchange="App.setFlexMode('height', this.value)">
+                <option value="fixed">ثابت</option>
+                <option value="hug">احتواء</option>
+                <option value="fill">مليء</option>
+            </select>
+            <div class="divider"></div>
+            <div id="input-gap" data-capsule-input data-value="0" data-min="0" data-max="100" data-step="1"
+                data-tooltip="الفجوة"></div>
+            <div id="input-padding" data-capsule-input data-value="0" data-min="0" data-max="100" data-step="1"
+                data-tooltip="الحشو"></div>
+        </div>
+
+        <!-- Child Layout Toolbar -->
+        <div id="toolbar-child-layout" style="display:none;gap:8px;padding:8px 12px;align-items:center;">
+            <button class="icon-btn" onclick="App.showMainToolbar()"><i data-lucide="arrow-right"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn" id="btn-ignore-layout" onclick="App.toggleIgnoreAutoLayout()"
+                data-tooltip="موضع مطلق"><i data-lucide="anchor"></i></button>
+            <select id="child-select-width-mode" class="compact-select" onchange="App.setFlexMode('width', this.value)">
+                <option value="fixed">ثابت</option>
+                <option value="hug">احتواء</option>
+                <option value="fill">مليء</option>
+            </select>
+            <select id="child-select-height-mode" class="compact-select"
+                onchange="App.setFlexMode('height', this.value)">
+                <option value="fixed">ثابت</option>
+                <option value="hug">احتواء</option>
+                <option value="fill">مليء</option>
+            </select>
+            <button class="icon-btn" onclick="App.extractFromContainer()" data-tooltip="إخراج"><i
+                    data-lucide="corner-left-up"></i></button>
+        </div>
+    </div>
+
+    <!-- Drawing Editor -->
+    <div id="drawing-editor">
+        <div id="drawing-header">
+            <span style="font-weight:bold">محرر الرسم</span>
+            <div style="display:flex;gap:10px">
+                <button class="icon-btn"
+                    style="width:auto;padding:0 15px;background:var(--accent-color);color:white;border-radius:6px"
+                    onclick="DrawingEditor.save()">حفظ وإغلاق</button>
+                <button class="icon-btn" onclick="DrawingEditor.close()"><i data-lucide="x"></i></button>
+            </div>
+        </div>
+        <div id="drawing-workspace">
+            <div id="tools-column">
+                <button class="icon-btn active" id="tool-brush" onclick="DrawingEditor.setTool('brush')"
+                    data-tooltip="فرشاة"><i data-lucide="brush"></i></button>
+                <div class="divider"></div>
+                <input type="color" id="draw-color" value="#000000" onchange="DrawingEditor.setColor(this.value)"
+                    style="width:30px;height:30px;border:none;padding:0;background:none">
+                <input type="range" min="1" max="50" value="5" oninput="DrawingEditor.setSize(this.value)"
+                    style="width:40px;transform:rotate(-90deg);margin-top:20px">
+            </div>
+            <div id="canvas-area">
+                <div id="drawing-layers"></div>
+            </div>
+            <div id="layers-column">
+                <div
+                    style="padding:10px;border-bottom:1px solid #333;display:flex;justify-content:space-between;color:#ccc">
+                    <span>الطبقات</span>
+                    <button class="icon-btn" style="width:24px;height:24px" onclick="DrawingEditor.addLayer()"><i
+                            data-lucide="plus"></i></button>
+                </div>
+                <div id="layers-list" style="flex:1;overflow-y:auto;padding:5px"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="image-viewer"></div>
+    <input type="file" id="file-input" accept="image/*,video/*" multiple>
+
+    <!-- Context Capsule -->
+    <div id="edit-capsule" class="floating-panel">
+        <button class="icon-btn" onclick="App.handleCapsuleAction('copy')" data-tooltip="نسخ"><i
+                data-lucide="copy"></i></button>
+        <button class="icon-btn" onclick="App.handleCapsuleAction('cut')" data-tooltip="قص"><i
+                data-lucide="scissors"></i></button>
+        <button class="icon-btn" onclick="App.handleCapsuleAction('paste')" data-tooltip="لصق"><i
+                data-lucide="clipboard"></i></button>
+        <div class="divider"></div>
+        <button class="icon-btn danger" onclick="App.handleCapsuleAction('delete')" data-tooltip="مسح"><i
+                data-lucide="trash-2"></i></button>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-panel small-modal">
+            <div class="modal-content">
+                <p>هل أنت متأكد من نقل العنصر إلى المجلد؟</p>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="App.confirmFolderDrop()">تأكيد</button>
+                    <button class="btn btn-secondary" onclick="App.cancelFolderDrop()">إبطال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Sprite Editor Modal (يحتوي على كافة العناصر المطلوبة لعدم انهيار السكربت) -->
+    <div class="sprite-editor-overlay" id="sprite-editor-overlay">
+        <div class="sprite-editor-modal">
+            <div class="sprite-editor-header">
+                <div class="sprite-editor-title">9-Slice Editor</div>
+                <div class="sprite-editor-actions">
+                    <button class="btn" id="se-btn-cancel">إلغاء</button>
+                    <button class="btn btn-primary" id="se-btn-save">حفظ</button>
+                </div>
+            </div>
+            <div class="sprite-editor-body">
+                <div class="editor-column">
+                    <div class="se-controls-section">
+                        <div class="se-input-grid">
+                            <div class="se-input-wrapper"><label>Top</label><input type="number" id="se-input-top"
+                                    value="0"></div>
+                            <div class="se-input-wrapper"><label>Right</label><input type="number" id="se-input-right"
+                                    value="0"></div>
+                            <div class="se-input-wrapper"><label>Bottom</label><input type="number" id="se-input-bottom"
+                                    value="0"></div>
+                            <div class="se-input-wrapper"><label>Left</label><input type="number" id="se-input-left"
+                                    value="0"></div>
+                        </div>
+
+                        <div class="se-control-group" style="width:100%; margin-bottom:15px;">
+                            <label class="se-label">Scale (Border Width)</label>
+                            <input type="range" id="se-slice-scale" min="0.1" max="5" step="0.1" value="1"
+                                style="width:100%">
+                        </div>
+
+                        <div class="se-control-group">
+                            <label class="se-label">Horizontal Repeat</label>
+                            <div class="se-radio-group" id="se-repeat-x">
+                                <label class="se-radio"><input type="radio" name="repeat-x" value="stretch"
+                                        checked><span>Stretch</span></label>
+                                <label class="se-radio"><input type="radio" name="repeat-x"
+                                        value="repeat"><span>Repeat</span></label>
+                                <label class="se-radio"><input type="radio" name="repeat-x"
+                                        value="round"><span>Round</span></label>
+                            </div>
+                        </div>
+                        <div class="se-control-group">
+                            <label class="se-label">Vertical Repeat</label>
+                            <div class="se-radio-group" id="se-repeat-y">
+                                <label class="se-radio"><input type="radio" name="repeat-y" value="stretch"
+                                        checked><span>Stretch</span></label>
+                                <label class="se-radio"><input type="radio" name="repeat-y"
+                                        value="repeat"><span>Repeat</span></label>
+                                <label class="se-radio"><input type="radio" name="repeat-y"
+                                        value="round"><span>Round</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="editor-canvas-container" id="se-canvas-container">
+                        <div class="editor-placeholder" id="se-placeholder">ارفع صورة للبدء</div>
+                        <div class="editor-canvas" id="se-canvas">
+                            <img id="se-image" class="editor-image" draggable="false" />
+                            <div id="se-magnifier" class="se-magnifier"></div>
+                            <div class="guide-line guide-h" id="guide-top" style="top:25%">
+                                <div class="guide-tail"></div>
+                            </div>
+                            <div class="guide-line guide-h" id="guide-bottom" style="top:75%">
+                                <div class="guide-tail"></div>
+                            </div>
+                            <div class="guide-line guide-v" id="guide-left" style="left:25%">
+                                <div class="guide-tail"></div>
+                            </div>
+                            <div class="guide-line guide-v" id="guide-right" style="left:75%">
+                                <div class="guide-tail"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview-column">
+                    <div class="preview-header">
+                        <span>معاينة حية</span>
+                        <button class="icon-btn small" id="se-btn-reset-view" title="Reset View"><i
+                                data-lucide="crosshair"></i></button>
+                    </div>
+                    <div class="preview-area" id="se-preview-area">
+                        <div id="se-preview-world">
+                            <div class="preview-box" id="se-preview-box">
+                                <div class="se-handle n" data-dir="n"></div>
+                                <div class="se-handle ne" data-dir="ne"></div>
+                                <div class="se-handle e" data-dir="e"></div>
+                                <div class="se-handle se" data-dir="se"></div>
+                                <div class="se-handle s" data-dir="s"></div>
+                                <div class="se-handle sw" data-dir="sw"></div>
+                                <div class="se-handle w" data-dir="w"></div>
+                                <div class="se-handle nw" data-dir="nw"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Registration -->
+    <script src="js/icon-data.js"></script>
+    <script src="js/nodes/BaseNode.js"></script>
+    <script src="js/nodes/EmptyNode.js"></script>
+    <script src="js/nodes/IconNode.js"></script>
+    <script src="js/nodes/NumberNode.js"></script>
+    <script src="js/nodes/SpriteNode.js"></script>
+    <script src="js/nodes/TextNode.js"></script>
+    <script src="js/nodes/TextWithTitleNode.js"></script>
+    <script src="js/nodes/CodeNode.js"></script>
+    <script src="js/nodes/ImageNode.js"></script>
+    <script src="js/nodes/VideoNode.js"></script>
+    <script src="js/nodes/DrawingNode.js"></script>
+    <script src="js/nodes/FolderNode.js"></script>
+    <script src="js/nodes/ContainerNode.js"></script>
+    <script src="js/DrawingEditor.js"></script>
+    <script src="js/ImageViewer.js"></script>
+    <script src="js/modules/NodeManager.js"></script>
+    <script src="js/components/CapsuleInput.js"></script>
+
+    <script src="js/modules/media/AssetManager.js"></script>
+    <script src="js/modules/storage/StorageEngine.js"></script>
+    <script src="js/modules/PersistenceModule.js"></script>
+
+    <script src="js/modules/tablet/TabletGestureEngine.js"></script>
+    <script src="js/modules/history/CommandManager.js"></script>
+
+    <script src="js/App.js"></script>
+    <script src="js/modules/WorkspaceModule.js"></script>
+    <script src="js/modules/ui/ComponentsUI.js"></script>
+    <script src="js/modules/ui/LayoutSettingsUI.js"></script>
+    <script src="js/modules/ui/SidebarManager.js"></script>
+    <script src="js/modules/ui/ToolbarManager.js"></script>
+    <script src="js/modules/ui/ToolbarUpdater.js"></script>
+    <script src="js/modules/ui/FocusManager.js"></script>
+    <script src="js/modules/ui/GridManager.js"></script>
+    <script src="js/modules/ui/TextEditorUI.js"></script>
+    <script src="js/modules/ui/CapsuleEditUI.js"></script>
+    <script src="js/modules/ui/FolderNamingUI.js"></script>
+
+    <script src="js/modules/RenderManager.js"></script>
+    <script src="js/modules/ui/ColorPickerUI.js"></script>
+    <script src="js/modules/UIModule.js"></script>
+    <script src="js/modules/SnapModule.js"></script>
+    <script src="js/modules/actions/NodeOperations.js"></script>
+    <script src="js/modules/actions/ContainerOperations.js"></script>
+    <script src="js/modules/InputModule.js"></script>
+    <script src="js/modules/events/ViewportEvents.js"></script>
+    <script src="js/modules/events/DragDropEvents.js"></script>
+    <script src="js/modules/events/PointerEvents.js"></script>
+    <script src="js/modules/events/ShortcutEvents.js"></script>
+    <script src="js/modules/events/TooltipEvents.js"></script>
+    <script src="js/modules/EventModule.js"></script>
+    <script src="js/modules/SpriteEditor.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker مسجل:', reg.scope))
+                    .catch(err => console.warn('تحذير Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

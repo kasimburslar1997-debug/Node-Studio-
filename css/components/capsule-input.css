@@ -1,0 +1,292 @@
+/* ============================================
+   Draggable Number Input Component (Capsule)
+   ============================================ */
+
+/* Base capsule input styling */
+.capsule-input {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+    height: 32px;
+    padding: 0 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    /* Perfect capsule shape */
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: ew-resize;
+    /* Horizontal resize cursor on hover */
+    user-select: none;
+    overflow: hidden;
+}
+
+.capsule-input:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.capsule-input:active,
+.capsule-input.dragging {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--accent-color);
+    cursor: ew-resize;
+}
+
+/* Hidden actual input field */
+.capsule-input input[type="number"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Display value */
+.capsule-value {
+    font-variant-numeric: tabular-nums;
+    /* Monospaced numbers */
+    letter-spacing: 0.3px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Optional unit label */
+.capsule-unit {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-left: 4px;
+    opacity: 0.7;
+}
+
+/* Drag indicator (subtle) */
+.capsule-input::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 12px;
+    background: linear-gradient(to right,
+            var(--text-secondary) 0%,
+            var(--text-secondary) 33%,
+            transparent 33%,
+            transparent 66%,
+            var(--text-secondary) 66%);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.capsule-input:hover::before {
+    opacity: 0.3;
+}
+
+/* Disabled state */
+.capsule-input.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Focus state (when editing via click) */
+.capsule-input.editing {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.capsule-input.editing input[type="number"] {
+    opacity: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    pointer-events: auto;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0;
+}
+
+.capsule-input.editing .capsule-value {
+    opacity: 0;
+}
+
+/* Remove spinner arrows */
+.capsule-input input[type="number"]::-webkit-outer-spin-button,
+.capsule-input input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.capsule-input input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Compact variant (smaller) */
+.capsule-input.compact {
+    min-width: 50px;
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+}
+
+/* Large variant */
+.capsule-input.large {
+    min-width: 80px;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 14px;
+}
+
+/* Value change animation */
+@keyframes value-pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.capsule-input.value-changed .capsule-value {
+    animation: value-pulse 0.3s ease;
+}
+
+/* Tooltip for drag hint */
+.capsule-input[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10000;
+}
+
+.capsule-input:hover[data-tooltip]::after {
+    opacity: 1;
+}
+
+/* ============================================
+   Color Slider Special Style (HSB)
+   ============================================ */
+
+/* Base color slider - for Hue */
+.capsule-input.color-slider {
+    min-width: 200px;
+    /* Wider for color selection */
+    height: 40px;
+    /* Taller */
+    background: linear-gradient(to right,
+            hsl(0, 100%, 50%) 0%,
+            hsl(60, 100%, 50%) 16.66%,
+            hsl(120, 100%, 50%) 33.33%,
+            hsl(180, 100%, 50%) 50%,
+            hsl(240, 100%, 50%) 66.66%,
+            hsl(300, 100%, 50%) 83.33%,
+            hsl(360, 100%, 50%) 100%);
+    /* Rainbow gradient for Hue */
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: visible;
+    /* Allow circle to overflow */
+}
+
+/* Saturation slider - from gray to full color */
+.capsule-input.color-slider.saturation-slider {
+    background: linear-gradient(to right,
+            hsl(0, 0%, 50%) 0%,
+            /* Gray */
+            hsl(var(--current-hue, 0), 100%, 50%) 100%
+            /* Full color */
+        );
+}
+
+/* Brightness slider - from black to full color (HSB style) */
+.capsule-input.color-slider.brightness-slider {
+    background: linear-gradient(to right,
+            #000000 0%,
+            var(--full-brightness-color, white) 100%);
+}
+
+.capsule-input.color-slider:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+/* Hide the default value display for color slider */
+.capsule-input.color-slider .capsule-value,
+.capsule-input.color-slider .capsule-unit,
+.capsule-input.color-slider input {
+    display: none !important;
+}
+
+/* Color indicator circle (handle) - داخل السلايدر */
+.capsule-input.color-slider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: var(--slider-position, 0%);
+    /* Dynamic position */
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--selected-color, white);
+    /* Dynamic color */
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s ease;
+    pointer-events: none;
+    z-index: 10;
+    display: block !important;
+    /* Ensure visibility */
+}
+
+.capsule-input.color-slider:active::after,
+.capsule-input.color-slider.dragging::after {
+    transform: translate(-50%, -50%) scale(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
+        inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark ring outline for better visibility */
+.capsule-input.color-slider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: var(--slider-position, 0%);
+    transform: translate(-50%, -50%);
+    width: 34px;
+    /* أكبر قليلاً من الحلقة الداخلية */
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    z-index: 9;
+}

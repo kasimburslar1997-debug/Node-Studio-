@@ -1,0 +1,338 @@
+/* .text-node-wrapper removed as per refactor */
+
+.text-node-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    min-height: 50px;
+    /* Match default node height */
+    gap: 8px;
+}
+
+.text-node-title {
+    flex: 1;
+    width: 0;
+    /* Allow flex to control width */
+    min-width: 50px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+    outline: none;
+    pointer-events: none;
+    text-align: right;
+    /* RTL support */
+}
+
+.node.editing .text-node-title {
+    pointer-events: auto;
+    cursor: text;
+}
+
+.text-toggle-btn {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    /* Circle shape */
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.text-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.text-toggle-btn:active,
+.text-toggle-btn.active {
+    background: #fff;
+    color: #000;
+    /* Invert color */
+}
+
+.text-toggle-btn.collapsed {
+    transform: rotate(-90deg);
+}
+
+.text-node-divider {
+    display: none;
+    /* Hide divider generally */
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 16px;
+}
+
+.text-node-content {
+    padding: 0;
+    /* Padding moved to editor for better click area */
+    min-height: 24px;
+    transition: all 0.3s ease;
+}
+
+.text-node-content.collapsed {
+    max-height: 0;
+    min-height: 0;
+    padding: 0 16px;
+    overflow: hidden;
+    opacity: 0;
+}
+
+.text-content-editor {
+    color: var(--text-primary);
+    line-height: 1.5;
+    outline: none;
+    min-height: 100%;
+    /* Ensure it fills parent */
+    height: auto;
+    max-height: 600px;
+    overflow-y: auto;
+    padding: 12px 16px 16px 16px;
+    /* Parent handles padding -> Moved here */
+    padding: 12px 16px 16px 16px;
+    /* Parent handles padding -> Moved here */
+    background-color: transparent;
+    /* Fully Transparent as requested */
+    /* Border Removed as per request */
+    border-radius: 12px;
+    /* Smooth corners */
+    width: 100%;
+    margin: 0;
+    /* height: auto - content dictates height */
+    box-sizing: border-box;
+    pointer-events: none;
+    /* Disabled by default */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Enable text editing only when node is focused */
+.node.editing .text-content-editor {
+    pointer-events: auto;
+    cursor: text;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 10+ */
+}
+
+/* Enable editing for child nodes when parent group is focused */
+.child-node .text-content-editor,
+.child-node .title-input {
+    pointer-events: auto !important;
+    cursor: text !important;
+}
+
+.text-content-editor::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari/Opera */
+}
+
+.text-content-editor[contenteditable="true"] {
+    cursor: text;
+}
+
+.text-content-editor:empty:before {
+    content: attr(data-placeholder);
+    color: #666;
+    pointer-events: none;
+}
+
+/* Remove black selection background */
+.text-content-editor::selection,
+.text-content-editor *::selection,
+.code-content::selection,
+.text-node-title::selection {
+    background: rgba(59, 130, 246, 0.3);
+    color: inherit;
+}
+
+/* Remove black backgrounds from formatted text elements */
+.text-content-editor p,
+.text-content-editor div,
+.text-content-editor h1,
+.text-content-editor h2,
+.text-content-editor h3,
+.text-content-editor h4,
+.text-content-editor h5,
+.text-content-editor h6,
+.text-content-editor ul,
+.text-content-editor ol,
+.text-content-editor li,
+.text-content-editor blockquote,
+.text-content-editor span {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Node States */
+/* Node States updated in node.css to use box-shadow */
+
+/* ==== Formatting Toolbar ==== */
+.formatting-toolbar {
+    position: fixed;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border-radius: 24px;
+    padding: 6px 10px;
+    display: none;
+    gap: 4px;
+    box-shadow: var(--shadow-floating);
+    z-index: 10000;
+    flex-wrap: nowrap;
+}
+
+.formatting-toolbar.visible {
+    display: flex;
+}
+
+.format-btn {
+    min-width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #ccc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+    font-size: 0.85rem;
+    padding: 0 8px;
+}
+
+.format-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.format-btn.active {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.format-btn i {
+    font-size: 0.9rem;
+}
+
+#current-font-size {
+    min-width: 24px;
+    text-align: center;
+}
+
+.color-indicator-circle {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+/* ==== Color Picker Popup ==== */
+.color-picker-popup {
+    position: fixed;
+    background: rgba(30, 30, 30, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 8px;
+    display: none;
+    gap: 6px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 10001;
+}
+
+.color-picker-popup.visible {
+    display: flex;
+}
+
+.color-option {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: 0.2s;
+    padding: 0;
+}
+
+.color-option.transparent-opt {
+    background: transparent;
+    border: 2px dashed #666;
+}
+
+.color-option:hover {
+    transform: scale(1.15);
+    border-color: #fff;
+}
+
+.color-option.active {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* ==== Enhanced Text & Code Nodes ==== */
+.node[class*="text"],
+.node[class*="code"] {
+    min-width: 200px;
+    max-width: 600px;
+    min-height: 30px;
+    max-height: 650px;
+}
+
+.code-content {
+    width: 100%;
+    min-height: 80px;
+    max-height: 600px;
+    background: none;
+    color: #a6e22e;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 12px;
+    border: none;
+    resize: none;
+    pointer-events: none;
+    font-size: 14px;
+    direction: ltr;
+    text-align: left;
+    box-sizing: border-box;
+    overflow-y: auto;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+}
+
+.code-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari/Opera */
+}
+
+/* Overflow Indicator */
+.overflow-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+    display: none !important;
+}
+
+.overflow-indicator.visible {
+    opacity: 1;
+}

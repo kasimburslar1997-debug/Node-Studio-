@@ -1,0 +1,584 @@
+.container-node {
+    /* Base styles are inherited from .node */
+    /* Default transparent until styled */
+    border: 0px solid transparent;
+
+    /* OPTIMIZATION: Do not use transition: all, it causes lag during JS dragging */
+    transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s;
+    pointer-events: auto;
+    overflow: visible;
+    /* Ensure selection rings of children are seen */
+}
+
+.container-node.clip-content {
+    overflow: hidden !important;
+}
+
+/* Ensure handles of children are visible above clipping containers when selected/focused */
+.container-node.clip-content:has(.selected),
+.container-node.clip-content:has(.focused) {
+    overflow: visible !important;
+}
+
+.container-node.dragging {
+    transition: none !important;
+}
+
+/* Force specific z-index for selected children to appear above siblings */
+.container-node .node.selected {
+    z-index: 100 !important;
+}
+
+/* Focus also needs promotion */
+.container-node .node.focused {
+    z-index: 101 !important;
+}
+
+/* Selected state removed to avoid double-border. Uses standard node ring. */
+
+/* User Request: Purple Selection Ring for Containers */
+.container-node.selected::before {
+    /* Selected: Purple 50% Opacity */
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.5), 0 0 0 4px rgba(147, 51, 234, 0.05) !important;
+}
+
+body .container-node.focused::before {
+    /* Focused: Purple 100% Opacity */
+    box-shadow: 0 0 0 2px #9333ea, 0 0 0 5px rgba(147, 51, 234, 0.2) !important;
+}
+
+.container-inner {
+    display: flex;
+    flex-direction: column;
+    /* Default vertical */
+    width: 100%;
+    height: 100%;
+    /* Align items defaults */
+    align-items: flex-start;
+    justify-content: flex-start;
+    box-sizing: border-box;
+
+    /* Allow dragging container from empty space */
+    pointer-events: auto;
+    overflow: visible;
+    /* Ensure inner wrapper doesn't clip */
+
+    /* REQUIRED for visual layout overlays to anchor correctly */
+    position: relative;
+
+    /* === HIDDEN SCROLLBAR (User Request) === */
+    /* Hide scrollbar but allow scrolling */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.container-inner::-webkit-scrollbar {
+    display: none;
+}
+
+/* Re-enable pointer events for children */
+.container-inner>* {
+    pointer-events: auto;
+}
+
+/* Override child node positioning when inside container */
+.container-node .node {
+    position: relative !important;
+    transform: none !important;
+    /* Disable absolute transform */
+    left: auto !important;
+    top: auto !important;
+    margin: 0 !important;
+    /* Margins handled by gap */
+    flex-shrink: 0;
+    /* Prevent shrinking */
+}
+
+.container-label {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    font-size: 12px;
+    gap: 10px;
+    border-radius: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0.7;
+    display: none;
+    /* User Request: Hide label */
+}
+
+/* Child Flex Modes (Figma-style Auto Layout) - Width */
+.flex-width-fixed {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: auto;
+}
+
+.flex-width-hug {
+    flex-grow: 0;
+    flex-shrink: 1;
+    width: auto;
+}
+
+.flex-width-fill {
+    flex-grow: 1;
+    flex-shrink: 1;
+    width: 0;
+}
+
+/* Child Flex Modes - Height */
+.flex-height-fixed {
+    flex-basis: auto;
+    min-height: 0;
+}
+
+.flex-height-hug {
+    flex-basis: auto;
+    min-height: 0;
+}
+
+.flex-height-fill {
+    flex-basis: 0;
+    min-height: 0;
+    height: 100%;
+}
+
+.container-node:hover .container-label,
+.container-node.selected .container-label {
+    opacity: 1;
+    color: var(--accent-color);
+}
+
+/* Ensure handles are hidden for container children ALWAYS unless selected/focused */
+.container-inner .node:not(.selected):not(.focused) .handle {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+/* User Request: Hide default stroke (box-shadow) for nested containers */
+/* MOVED TO JS LOGIC: We set strokeWidth to 0 on creation/nesting instead */
+
+/* Drop Target Visual - Inside Container (User Request Fix) */
+.container-node.drop-target::after {
+    content: '';
+    position: absolute;
+    /* Use inset with positive value to place INSIDE the container */
+    inset: 4px;
+    border-radius: calc(var(--current-radius, 8px) - 2px);
+    /* Orange Border as requested */
+    border: 2px dashed #f97316;
+    background: rgba(249, 115, 22, 0.08);
+    /* Slight orange tint */
+    pointer-events: none;
+    z-index: 200;
+}
+
+/* ====== Insertion Guide Line (Drag-Drop Positioning) ====== */
+.insertion-guide {
+    position: absolute;
+    pointer-events: none;
+    z-index: 300;
+    transition: top 0.12s ease, left 0.12s ease, width 0.12s ease, height 0.12s ease;
+}
+
+/* Horizontal guide (for vertical layout - line goes left-to-right) */
+.insertion-guide.guide-horizontal {
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #3b82f6, #3b82f6, transparent);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6), 0 0 16px rgba(59, 130, 246, 0.3);
+}
+
+/* Vertical guide (for horizontal layout - line goes top-to-bottom) */
+.insertion-guide.guide-vertical {
+    width: 3px;
+    background: linear-gradient(180deg, transparent, #3b82f6, #3b82f6, transparent);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6), 0 0 16px rgba(59, 130, 246, 0.3);
+}
+
+/* Dot markers at guide endpoints */
+.insertion-guide::before,
+.insertion-guide::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #3b82f6;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
+}
+
+.insertion-guide.guide-horizontal::before {
+    left: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.insertion-guide.guide-horizontal::after {
+    right: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.insertion-guide.guide-vertical::before {
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.insertion-guide.guide-vertical::after {
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Pulse animation on the guide for visibility */
+@keyframes guide-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.insertion-guide {
+    animation: guide-pulse 1.5s ease-in-out infinite;
+}
+
+/* Alignment Popup */
+.alignment-popup {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 50%;
+    transform: translateX(50%);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: var(--shadow-floating);
+    z-index: 5000;
+
+    display: none;
+    /* Default hidden */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 140px;
+}
+
+/* Force Grid when shown */
+.alignment-popup[style*="display: flex"],
+.alignment-popup[style*="display: grid"] {
+    display: grid !important;
+}
+
+.align-distribute-row {
+    grid-column: span 3;
+    display: flex;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 4px;
+}
+
+/* The Grid Buttons */
+.align-grid-btn {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 6px;
+    transition: 0.1s;
+}
+
+.align-grid-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* The Icon (Dot or Bar) */
+.align-grid-btn::after {
+    content: "";
+    display: block;
+    width: 6px;
+    height: 6px;
+    background: #555;
+    /* Inactive color */
+    border-radius: 50%;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Active State */
+.align-grid-btn.active::after {
+    background: var(--accent-color);
+    box-shadow: 0 0 5px var(--accent-color);
+}
+
+/* Shapes based on Layout Mode */
+
+/* Horizontal (Row) Mode: Selected items become Vertical Bars */
+.alignment-popup.mode-horizontal .align-grid-btn.active::after {
+    width: 6px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+/* Vertical (Column) Mode: Selected items become Horizontal Bars */
+.alignment-popup.mode-vertical .align-grid-btn.active::after {
+    width: 14px;
+    height: 6px;
+    border-radius: 3px;
+}
+
+/* Flex (Wrap) Mode: Same as Horizontal usually */
+.alignment-popup.mode-wrap .align-grid-btn.active::after {
+    width: 6px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.align-dist-btn {
+    flex: 1;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.align-dist-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.align-dist-btn.active {
+    color: var(--accent-color);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* === VISUAL LAYOUT MODE (Figma-style) === */
+
+.visual-layout-active .container-node.selected,
+.visual-layout-active .container-node.focused {
+    /* Stronger indicator when visual layout is active */
+    box-shadow: 0 0 0 2px #9333ea, 0 0 0 8px rgba(147, 51, 234, 0.1) !important;
+}
+
+/* Reorder Handles (Pink Circular Rings) */
+.reorder-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: 3px solid #ec4899;
+    /* Pink */
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: grab;
+    z-index: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    display: none;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+/* White inner border for the ring to make it stand out */
+.reorder-handle::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border: 1.5px solid white;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.visual-layout-active .reorder-handle {
+    display: block;
+}
+
+.reorder-handle:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 8px rgba(236, 72, 153, 0.5);
+}
+
+.reorder-handle:active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1);
+    background: rgba(236, 72, 153, 0.1);
+}
+
+/* Diagonal Shading Utility - Color Specific */
+.padding-visualizer.diagonal-shade {
+    background-image: repeating-linear-gradient(45deg,
+            rgba(59, 130, 246, 0.4),
+            rgba(59, 130, 246, 0.4) 12px,
+            rgba(59, 130, 246, 0.1) 12px,
+            rgba(59, 130, 246, 0.1) 24px);
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.gap-visualizer.diagonal-shade {
+    background-image: repeating-linear-gradient(45deg,
+            rgba(236, 72, 153, 0.4),
+            rgba(236, 72, 153, 0.4) 12px,
+            rgba(236, 72, 153, 0.1) 12px,
+            rgba(236, 72, 153, 0.1) 24px);
+    background-color: rgba(236, 72, 153, 0.1);
+}
+
+/* Padding Visualizer (Blue) */
+.padding-visualizer {
+    position: absolute;
+    background-color: transparent;
+    pointer-events: none;
+    z-index: 400;
+    transition: opacity 0.2s;
+    opacity: 0.8;
+    /* High default visibility */
+}
+
+.padding-visualizer:hover {
+    opacity: 1;
+}
+
+.padding-visualizer.side-top {
+    top: 0;
+    left: 0;
+    width: 100%;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.5);
+    min-height: 4px;
+}
+
+.padding-visualizer.side-bottom {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-top: 2px solid rgba(59, 130, 246, 0.5);
+    min-height: 4px;
+}
+
+.padding-visualizer.side-left {
+    left: 0;
+    top: 0;
+    height: 100%;
+    border-right: 2px solid rgba(59, 130, 246, 0.5);
+    min-width: 4px;
+}
+
+.padding-visualizer.side-right {
+    right: 0;
+    top: 0;
+    height: 100%;
+    border-left: 2px solid rgba(59, 130, 246, 0.5);
+    min-width: 4px;
+}
+
+/* Gap Visualizer (Pink) */
+.gap-visualizer {
+    position: absolute;
+    background-color: transparent;
+    pointer-events: none;
+    z-index: 400;
+    transition: opacity 0.2s;
+    opacity: 0.8;
+}
+
+.gap-visualizer:hover {
+    opacity: 1;
+}
+
+/* Common Layout Grips (Handles for drag) */
+.layout-grip {
+    position: absolute;
+    width: 8px;
+    height: 24px;
+    background: white;
+    border: 2px solid #3b82f6;
+    border-radius: 4px;
+    pointer-events: auto;
+    cursor: ns-resize;
+    z-index: 550;
+    /* Above everything */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.layout-grip:hover {
+    transform: scale(1.1) translate(0, 0);
+    /* Reset centering if needed in specific classes */
+    box-shadow: 0 0 10px currentColor;
+    border-width: 3px;
+}
+
+/* Specific Grip Positions & Styles */
+.padding-visualizer .layout-grip {
+    border-color: #3b82f6;
+}
+
+.gap-visualizer .layout-grip {
+    border-color: #ec4899;
+}
+
+.padding-visualizer.side-top .layout-grip {
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    width: 24px;
+    height: 6px;
+    cursor: ns-resize;
+}
+
+.padding-visualizer.side-bottom .layout-grip {
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 6px;
+    cursor: ns-resize;
+}
+
+.padding-visualizer.side-left .layout-grip {
+    right: 0;
+    top: 50%;
+    transform: translate(50%, -50%);
+    width: 6px;
+    height: 24px;
+    cursor: ew-resize;
+}
+
+.padding-visualizer.side-right .layout-grip {
+    left: 0;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 24px;
+    cursor: ew-resize;
+}
+
+.gap-visualizer .layout-grip {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.gap-visualizer.horizontal .layout-grip {
+    width: 6px;
+    height: 24px;
+    cursor: ew-resize;
+}
+
+.gap-visualizer.vertical .layout-grip {
+    width: 24px;
+    height: 6px;
+    cursor: ns-resize;
+}

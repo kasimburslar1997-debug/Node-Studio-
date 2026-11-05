@@ -1,0 +1,310 @@
+.image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(128, 128, 128, .1);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.node-inner {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* Ensure images don't overflow */
+    display: block;
+    /* Required for column scrolling if needed */
+}
+
+/* Single Image */
+.node-img {
+    width: 100%;
+    height: auto;
+    /* Preserve aspect ratio */
+    min-height: 100%;
+    /* Ensure it covers if needed, or specific to single view */
+    object-fit: contain;
+    /* Single view logic */
+    display: block;
+    pointer-events: auto;
+}
+
+/* Specific override for single image node to cover */
+.node-inner>.node-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+/* Image Grid Container - Flexible Masonry Style */
+.image-grid {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    /* Allow scrolling if content is long */
+    padding: 2px;
+    box-sizing: border-box;
+    display: block;
+    /* Reset from grid */
+    column-gap: 4px;
+    /* Space between columns */
+    column-width: 100px;
+    /* Minimum width for a column. Browser calculates count. */
+
+    /* Hide scrollbar */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+
+    /* Enable vertical pan for touch, override global none */
+    touch-action: pan-y;
+}
+
+.image-grid::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+/* 
+   We remove specific grid-2/3/4 classes relying on fixed counts.
+   The column-width handles it automatically based on node width.
+   However, we can keep overrides if we want to force something, 
+   but for "flexible expansion", standard properties work best.
+*/
+
+
+
+.grid-item {
+    position: relative;
+    width: 100%;
+    height: auto;
+    /* Let content dictate height */
+    margin-bottom: 4px;
+    /* Vertical gap */
+    break-inside: avoid;
+    /* Prevent splitting */
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.grid-item img {
+    width: 100%;
+    height: auto;
+    /* Maintain aspect ratio */
+    object-fit: cover;
+    /* Won't crop much if width matches, effectively 'contain' width */
+    display: block;
+    transition: filter 0.2s;
+}
+
+.grid-item:hover img {
+    filter: brightness(0.9);
+}
+
+/* Overlay for expanding */
+.img-btn-overlay {
+    position: absolute;
+    top: calc(10px / var(--zoom-scale, 1));
+    right: calc(10px / var(--zoom-scale, 1));
+    width: calc(30px / var(--zoom-scale, 1));
+    height: calc(30px / var(--zoom-scale, 1));
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: .2s;
+    cursor: pointer;
+    z-index: 20;
+}
+
+.node:hover .img-btn-overlay {
+    opacity: 1;
+}
+
+/* Floating button for single image */
+.img-floating-btn {
+    position: absolute;
+    top: calc(10px / var(--zoom-scale, 1));
+    right: calc(10px / var(--zoom-scale, 1));
+    width: calc(30px / var(--zoom-scale, 1));
+    height: calc(30px / var(--zoom-scale, 1));
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .2s;
+    cursor: pointer;
+    z-index: 20;
+    pointer-events: auto;
+    /* Ensure clickable */
+    /* Always visible or hover? User implied it's a primary method. Let's make it visible on hover of node */
+    opacity: 0;
+}
+
+.node:hover .img-floating-btn {
+    opacity: 1;
+}
+
+/* Expand button for individual grid items */
+.grid-expand-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0;
+    transition: 0.2s;
+    pointer-events: auto;
+    z-index: 5;
+}
+
+.grid-item:hover .grid-expand-btn {
+    opacity: 1;
+}
+
+/* Image Viewer Modal */
+#image-viewer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .95);
+    z-index: var(--z-modal);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+#image-viewer img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    z-index: 1;
+}
+
+#viewer-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    z-index: 10;
+    background: rgba(255, 255, 255, .2);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Vertical Drop Indicator */
+.drop-indicator-vertical {
+    position: absolute;
+    left: -2px;
+    /* Position before the item */
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: #3b82f6;
+    z-index: 10;
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+/* Last indicator handling */
+.drop-indicator-vertical.last-indicator {
+    left: auto;
+    right: -2px;
+    /* Position after the last item if needed, or relative to container? */
+    /* Since last indicator is appended to grid, it might not be inside a relative item container. */
+    /* Wait, the loop adds indicator inside grid-item. The last-indicator is standalone. */
+    position: relative;
+    width: 4px;
+    height: 100px;
+    /* arbitrary height or matching row? Grid height varies. */
+    /* Re-think: The last indicator should be attached to the last item? Or just use "after" logic on last item. */
+    /* With masonry/grid, "after last item" is tricky if last item isn't bottom right. */
+    /* For now, let's keep it simple: Show indicator on the right of the item if dropping "after". */
+    /* My logic in JS uses `showIndicator` which reveals `#indicator-ID-INDEX`. */
+    /* The index N (length) indicator is separate. */
+    display: none;
+    /* Hide standalone unless we figure out positioning. JS logic uses dragging over items mostly. */
+}
+
+/* Correcting JS Logic Support */
+/* JS expects indicator INSIDE grid-item. */
+/* If dropping "after" item 0, it shows indicator 1. Indicator 1 is inside item 1? */
+/* Yes, itemsHTML loop adds index I. */
+/* Indicator I is "before" item I. */
+/* So dropping after Item 0 -> Show Indicator 1 (Before Item 1). */
+/* Works for internal items. */
+/* For LAST item (index N-1). Dropping after it -> Show Indicator N. */
+/* Indicator N is the separate one appended at end. */
+/* Since it's a flex/grid layout, just appending a div might break layout or sit below. */
+/* Let's make .image-grid relative and position last-indicator absolutely? No, scrollable. */
+/* Let's make last indicator part of the grid/list flow? */
+/* Actually, for now, let's just make the last indicator visible if active. */
+/* If using column layout, a standalone div might just be next column. */
+
+.image-grid.editing-grid {
+    /* Style tweaks for edit mode */
+    padding-left: 4px;
+    /* Space for first indicator */
+}
+
+.grid-item.editable {
+    /* Styles for draggable items */
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.grid-item.editable:hover {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.grid-delete-btn {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    /* Opposite to expand btn */
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fee2e2;
+    /* Pink */
+    color: #ef4444;
+    /* Red */
+    border: 1px solid #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 20;
+    transition: 0.2s;
+}
+
+.grid-delete-btn:hover {
+    background: #fecaca;
+    transform: scale(1.1);
+}

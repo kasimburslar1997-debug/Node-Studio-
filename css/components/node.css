@@ -1,0 +1,563 @@
+.node {
+    position: absolute;
+    background-color: var(--bg-panel);
+    border-radius: var(--node-radius);
+
+    /* Simulate Layout-independent "Outside Border" using box-shadow */
+    box-shadow: none;
+
+    display: flex;
+    flex-direction: column;
+    transform-origin: center center;
+    overflow: visible;
+    transition: box-shadow .1s;
+
+    /* Remove actual border to prevent layout shift */
+    border: none;
+
+    /* Default outline (hidden) */
+    outline: max(1.5px, calc(3px / var(--zoom-scale, 1))) solid transparent;
+    outline-offset: max(1px, calc(2px / var(--zoom-scale, 1)));
+    transition: outline-color .15s;
+
+    /* Hide Scrollbar */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.toolbar-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    margin-right: 8px;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+}
+
+.node::-webkit-scrollbar {
+    display: none;
+}
+
+.node.dragging {
+    opacity: 1 !important;
+}
+
+[data-theme="light"] .node {
+    box-shadow: none;
+    /* Removed shadow */
+    border-color: var(--border-color);
+}
+
+.node:not(.selected):not(.focused):hover {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Selection/Focus Rings using pseudo-element to avoid conflict with JS border box-shadow */
+.node::before {
+    content: '';
+    position: absolute;
+    /* Center align: no inset */
+    inset: 0;
+    /* Match node radius exactly */
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: none;
+    transition: box-shadow 0.2s, inset 0.2s, border-radius 0.2s;
+    z-index: 999;
+    /* Always on top */
+}
+
+.node.selected {
+    /* Use box-shadow for outside border */
+    z-index: 100;
+    /* Ensure selection is visible on top */
+}
+
+.node.selected::before {
+    /* Center stroke: 1.5px out, 1.5px in (Total 3px) */
+    box-shadow: 0 0 0 1.5px #888, inset 0 0 0 1.5px #888;
+}
+
+/* Focus state - higher specificity to ensure it overrides selected */
+body .node.focused {
+    /* Outside stroke for focus */
+    pointer-events: auto;
+    z-index: 101;
+}
+
+body .node.focused::before {
+    /* Center stroke for focus: 1.5px out, 1.5px in */
+    box-shadow: 0 0 0 1.5px var(--stroke-selection), inset 0 0 0 1.5px var(--stroke-selection);
+}
+
+/* Block interaction inside focused nodes */
+body .node.focused .node-inner {
+    pointer-events: none;
+    user-select: none;
+}
+
+.node.multi-selected::before {
+    box-shadow: 0 0 0 1.5px var(--stroke-selection), inset 0 0 0 1.5px var(--stroke-selection);
+}
+
+/* Hide Selection State when interacting with Properties (User Request) */
+body.hide-selection-active .node.selected::before,
+body.hide-selection-active .node.focused::before,
+body.hide-selection-active .node.multi-selected::before {
+    opacity: 0 !important;
+    transition: opacity 0.15s ease-out;
+}
+
+body.hide-selection-active .resize-handle,
+body.hide-selection-active .rotate-handle {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+
+
+/* Focus Mode Active - Visual feedback */
+body.focus-mode-active {
+    cursor: crosshair;
+}
+
+
+
+body.focus-mode-active .node:hover:not(.focused)::before {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+.node-inner {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.handle {
+    position: absolute;
+    width: max(40px, calc(var(--handle-hitbox) / var(--zoom-scale, 1)));
+    height: max(40px, calc(var(--handle-hitbox) / var(--zoom-scale, 1)));
+    background: transparent;
+    z-index: 1000;
+    /* Above ::before (999) */
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.node.focused .handle,
+.node.selected .handle,
+.node.multi-selected .handle {
+    display: flex;
+    pointer-events: auto;
+}
+
+
+
+.handle-vis {
+    background: white;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, background-color 0.2s;
+    border: none;
+    /* Removed border */
+}
+
+/* Light theme support */
+[data-theme="light"] .handle-vis {
+    background: #fff;
+    border: none;
+}
+
+@media(hover:hover) {
+
+    .handle:hover .handle-vis {
+        opacity: 0.3;
+        /* 30% Opacity on Hover */
+    }
+
+    .handle.active .handle-vis {
+        opacity: 1;
+        /* 100% Opacity on Active/Click */
+        background: #3b82f6;
+        /* Blue Color */
+    }
+}
+
+@media(hover:none) {
+
+    .node.focused .handle .handle-vis,
+    .node.selected .handle .handle-vis {
+        opacity: 0.3;
+    }
+
+    .handle.active .handle-vis {
+        opacity: 1;
+        background: #3b82f6;
+    }
+}
+
+.h-n {
+    top: calc(-25px / var(--zoom-scale, 1));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: calc(var(--handle-hitbox) / var(--zoom-scale, 1));
+    cursor: n-resize;
+}
+
+.h-n .handle-vis {
+    width: calc(var(--handle-pill-length) / var(--zoom-scale, 1));
+    height: calc(var(--handle-pill-thick) / var(--zoom-scale, 1));
+    border-radius: 10px;
+}
+
+.h-s {
+    bottom: calc(-25px / var(--zoom-scale, 1));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: calc(var(--handle-hitbox) / var(--zoom-scale, 1));
+    cursor: s-resize;
+}
+
+.h-s .handle-vis {
+    width: calc(var(--handle-pill-length) / var(--zoom-scale, 1));
+    height: calc(var(--handle-pill-thick) / var(--zoom-scale, 1));
+    border-radius: 10px;
+}
+
+.h-e {
+    right: calc(-25px / var(--zoom-scale, 1));
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: calc(var(--handle-hitbox) / var(--zoom-scale, 1));
+    cursor: e-resize;
+}
+
+.h-e .handle-vis {
+    width: calc(var(--handle-pill-thick) / var(--zoom-scale, 1));
+    height: calc(var(--handle-pill-length) / var(--zoom-scale, 1));
+    border-radius: 10px;
+}
+
+.h-w {
+    left: calc(-25px / var(--zoom-scale, 1));
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: calc(var(--handle-hitbox) / var(--zoom-scale, 1));
+    cursor: w-resize;
+}
+
+.h-w .handle-vis {
+    width: calc(var(--handle-pill-thick) / var(--zoom-scale, 1));
+    height: calc(var(--handle-pill-length) / var(--zoom-scale, 1));
+    border-radius: 10px;
+}
+
+.h-rot {
+    width: calc(30px / var(--zoom-scale, 1));
+    height: calc(30px / var(--zoom-scale, 1));
+    cursor: grab;
+    z-index: 1001;
+    /* Slightly higher than resize handles */
+}
+
+/* Locked Handle Styles */
+.handle.locked-handle {
+    cursor: not-allowed !important;
+    pointer-events: auto !important;
+    /* Ensure hover works */
+}
+
+.handle.locked-handle:hover .handle-vis,
+.handle.locked-handle.dragging .handle-vis {
+    background-color: #ec4899 !important;
+    /* Pink-500 */
+    transform: scale(1.2);
+}
+
+.handle.locked-handle:hover,
+.handle.locked-handle.dragging {
+    opacity: 1;
+}
+
+.h-rot .handle-vis {
+    width: calc(12px / var(--zoom-scale, 1));
+    height: calc(12px / var(--zoom-scale, 1));
+    border-radius: 50%;
+    /* border: calc(2px / var(--zoom-scale, 1)) solid var(--accent-color); -- REMOVED */
+    border: none;
+    background: white;
+    /* Use standard white fill */
+    opacity: 0;
+    transition: opacity .2s;
+}
+
+.handle.h-rot:hover .handle-vis {
+    opacity: 1;
+}
+
+.h-rot-nw {
+    top: calc(-25px / var(--zoom-scale, 1));
+    left: calc(-25px / var(--zoom-scale, 1));
+    cursor: nw-resize;
+}
+
+.h-rot-ne {
+    top: calc(-25px / var(--zoom-scale, 1));
+    right: calc(-25px / var(--zoom-scale, 1));
+    cursor: ne-resize;
+}
+
+.h-rot-sw {
+    bottom: calc(-25px / var(--zoom-scale, 1));
+    left: calc(-25px / var(--zoom-scale, 1));
+    cursor: sw-resize;
+}
+
+.h-rot-se {
+    bottom: calc(-25px / var(--zoom-scale, 1));
+    right: calc(-25px / var(--zoom-scale, 1));
+    cursor: se-resize;
+}
+
+.node-header {
+    padding: 8px 12px;
+    background: rgba(128, 128, 128, .1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 40px;
+    cursor: move;
+}
+
+.node-header input {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-family: inherit;
+    font-weight: bold;
+    width: 100%;
+    pointer-events: none;
+}
+
+.node-textarea {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: inherit;
+    resize: none;
+    pointer-events: none;
+    line-height: 1.5;
+    padding: 20px;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.node-textarea:focus {
+    outline: none;
+}
+
+/* Make sure editor fills the space for clickability */
+.text-content-editor {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    outline: none;
+    cursor: text;
+}
+
+.node.editing input,
+.node.editing textarea,
+.node.editing .code-content {
+    pointer-events: auto;
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+}
+
+/* Prevent dragging while editing */
+.node.editing {
+    cursor: default !important;
+}
+
+.node.editing .node-inner {
+    cursor: default !important;
+}
+
+.node.editing .text-content-editor,
+.node.editing .code-content {
+    pointer-events: auto !important;
+    cursor: text !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+.node.locked {
+    pointer-events: none;
+    font-size: 0.8rem;
+}
+
+.node.locked .handle {
+    display: none !important;
+}
+
+.node.locked .node-inner {
+    pointer-events: auto;
+}
+
+.node-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.node-body.collapsed {
+    flex: 0 0 0;
+    min-height: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    opacity: 0;
+    overflow: hidden;
+}
+
+/* Remove padding from node-body to allow editor to handle it */
+.node-body {
+    padding: 0;
+}
+
+.node-body.scroll-mode {
+    overflow-y: auto;
+}
+
+.node-body:not(.scroll-mode) textarea,
+.node-body:not(.scroll-mode) .code-content {
+    overflow: hidden;
+}
+
+.node-body.scroll-mode textarea,
+.node-body.scroll-mode .code-content {
+    overflow-y: auto;
+}
+
+.collapse-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: .2s;
+    margin-left: 8px;
+}
+
+.collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 1;
+}
+
+.collapse-btn i {
+    pointer-events: none;
+    font-size: 0.8rem;
+}
+
+/* Group Node Styles */
+.group-node-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(128, 128, 128, 0.1);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.group-title {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.group-node-content {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 var(--node-radius) var(--node-radius);
+}
+
+/* Container Child Hover Effect */
+.child-hover-target {
+    outline: 2px solid rgba(255, 255, 255, 0.3) !important;
+    outline-offset: 2px;
+}
+
+.drop-target {
+    box-shadow: 0 0 0 2px var(--primary-color) !important;
+    background: rgba(var(--primary-rgb), 0.1) !important;
+}
+
+/* Figma-like Properties Panel */
+.compact-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 11px;
+    width: 40px;
+    text-align: center;
+    outline: none;
+}
+
+.compact-input:focus {
+    border-color: var(--primary-color);
+}
+
+.compact-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 4px;
+    padding: 2px;
+    font-size: 11px;
+    outline: none;
+    cursor: pointer;
+}
+
+.label-xs {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+}
+
+.toggle-group .icon-btn.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.icon-btn.small {
+    width: 24px;
+    height: 24px;
+}
+
+.icon-btn.small i {
+    width: 14px;
+    height: 14px;
+}

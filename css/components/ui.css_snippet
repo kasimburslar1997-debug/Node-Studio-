@@ -1,0 +1,43 @@
+
+/* Display Mode Toggle */
+.display-mode-group {
+    display: flex;
+    gap: 5px;
+    background: var(--bg-input);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.display-mode-btn {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.display-mode-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.display-mode-btn.active {
+    background: var(--accent-color);
+    color: white;
+}
+
+/* Immersive Mode */
+body.immersive-mode #top-bar {
+    display: none !important;
+}
+
+body.immersive-mode #breadcrumbs {
+    display: none;
+}

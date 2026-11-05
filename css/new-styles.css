@@ -1,0 +1,333 @@
+/* Layout Container */
+#ui-layout-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    z-index: 5000;
+    /* High z-index to sit on top of canvas */
+    pointer-events: none;
+    /* Let clicks pass through to canvas where no UI exists */
+}
+
+/* Top Bar */
+#top-bar-container {
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    background: transparent;
+    /* Or semi-transparent if desired */
+    pointer-events: none;
+    /* CHANGED: Allow clicks to pass through empty space */
+}
+
+#top-bar-container>* {
+    pointer-events: auto;
+    /* Ensure buttons/children are still clickable */
+}
+
+#breadcrumbs,
+#settings-btn {
+    position: static !important;
+    /* Override absolute positioning */
+    inset: auto !important;
+    transform: none !important;
+    margin: 20px 0 0 0;
+    /* Add top margin */
+    pointer-events: auto;
+    /* Explicitly set for these just in case */
+}
+
+#breadcrumbs {
+    display: flex;
+    align-items: center;
+    direction: rtl;
+    /* Ensure Right-to-Left layout */
+    gap: 5px;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+/* Middle Container */
+#middle-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    /* Align sidebar to the right (RTL) or left depending on direction */
+    padding: 0 15px;
+    /* Add some spacing from edge */
+    overflow: hidden;
+    /* Prevent full container scroll */
+    pointer-events: none;
+    direction: ltr;
+    /* Ensure layout logic checks out, though body is rtl */
+    justify-content: flex-end;
+    /* If RTL, flex-end puts it on the right? Body is RTL. */
+}
+
+/* Since body is dir="rtl", flex-start is Right. */
+
+#sidebar {
+    position: static !important;
+    transform: none !important;
+    height: calc(100vh - 160px);
+    /* Fixed height to fill vertical space */
+    max-height: none;
+    margin: 80px 0;
+    width: 50px;
+    overflow-y: hidden;
+    /* Hide scrollbar, let JS handle overflow via popup */
+    /* ... rest of properties ... */
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    background: var(--bg-panel);
+    /* Solid */
+    /* backdrop-filter: var(--glass-blur); */
+    border: 1px solid var(--border-color);
+    border-radius: 24px !important;
+    padding: 10px 4px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    transition: height 0.3s;
+}
+
+#sidebar-extra-popup {
+    /* ... positioning logic ... */
+    position: fixed;
+    right: 80px;
+    bottom: 100px;
+    z-index: 2000;
+    background: var(--bg-panel);
+    /* Solid */
+    /* backdrop-filter: var(--glass-blur); */
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 12px;
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    /* Increased gap */
+    width: 220px;
+    /* Fixed consistency */
+    justify-items: center;
+    /* Center icons */
+    box-shadow: var(--shadow-floating);
+
+    min-height: 140px;
+    max-height: 50vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    align-content: start;
+    opacity: 0;
+    transform: translateX(10px) scale(0.95);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+}
+
+#sidebar-extra-popup.visible {
+    display: grid;
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    pointer-events: auto;
+}
+
+#sidebar-tools {
+    flex: 1;
+    overflow: hidden;
+    /* Prevent scrolling inside, force overflow to popup */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 0;
+    /* Remove padding as More button takes space */
+    width: 100%;
+}
+
+/* Hide dividers inside the tools container (since we rebuild it without them) */
+#sidebar-tools .divider {
+    display: none !important;
+}
+
+/* Ensure the bottom divider (outside tools) works */
+#sidebar-divider-bottom {
+    display: block;
+    /* Managed by JS, but ensure CSS doesn't hide it globally */
+    background-color: var(--border-color);
+    /* Ensure visibility */
+    opacity: 0.5;
+}
+
+/* Force circular shape and prevent squashing */
+#sidebar .icon-btn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2px 0;
+    /* Reduced margin */
+    padding: 0;
+    aspect-ratio: 1 / 1;
+}
+
+#sidebar-tools::-webkit-scrollbar {
+    display: none;
+}
+
+#sidebar-more-container {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    padding-top: 5px;
+}
+
+/* Bottom Bar */
+#bottom-bar-container {
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    pointer-events: none;
+    /* Container passes clicks */
+    margin-bottom: 20px;
+    /* Add bottom margin */
+}
+
+#zoom-panel-inner,
+#undo-panel-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg-panel);
+    /* Solid */
+    /* backdrop-filter: var(--glass-blur); */
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    box-shadow: var(--shadow-lg);
+    pointer-events: auto;
+}
+
+
+
+/* Mobile responsive adjustments if needed */
+@media (max-width: 600px) {
+    #sidebar {
+        width: 50px;
+    }
+}
+
+/* ==========================================================================
+   Local Database & Projects Manager Modal Styles
+   ========================================================================== */
+
+#projects-modal {
+    animation: fadeIn 0.25s ease-out;
+}
+
+#projects-modal.visible {
+    display: flex !important;
+}
+
+#projects-modal .modal-panel {
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+#projects-modal .btn {
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+#projects-modal .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+#projects-modal .btn-primary:hover {
+    background-color: #2563eb !important;
+}
+
+#projects-modal .btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Project Item Styles */
+.project-item {
+    cursor: default;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.project-item:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.project-item.active {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+.project-item.active:hover {
+    background: rgba(59, 130, 246, 0.12) !important;
+    border-color: rgba(59, 130, 246, 0.35) !important;
+}
+
+.project-title {
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.project-title:hover {
+    color: var(--accent-color) !important;
+    text-decoration: underline;
+}
+
+/* Custom search style */
+#project-search {
+    transition: all 0.2s ease;
+}
+
+#project-search:focus {
+    border-color: var(--accent-color) !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; backdrop-filter: blur(0px); }
+    to { opacity: 1; backdrop-filter: blur(5px); }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Spinner Animation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}

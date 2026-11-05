@@ -1,0 +1,41 @@
+/* Empty Node Styles */
+.empty-node-content {
+    transition: opacity 0.2s;
+    color: var(--text-secondary);
+}
+
+.node.selected .empty-node-content {
+    opacity: 0.8 !important;
+    color: var(--accent-color);
+}
+
+/* Icon Node Styles */
+.icon-node-content {
+    color: var(--text-primary);
+    transition: color 0.2s;
+}
+
+.icon-node-content i {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Icon Picker Item */
+.icon-picker-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+.icon-picker-item:hover {
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+    border-color: var(--accent-color);
+}

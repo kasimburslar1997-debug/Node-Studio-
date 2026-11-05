@@ -1,0 +1,432 @@
+/* Sprite Editor Modal */
+.sprite-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.sprite-editor-modal {
+    width: 95vw;
+    max-width: 1200px;
+    height: 90vh;
+    background: var(--bg-panel);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.sprite-editor-header {
+    height: 60px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-panel-secondary);
+}
+
+.sprite-editor-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.sprite-editor-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.sprite-editor-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* Left Column: Editor & Controls */
+.editor-column {
+    flex: 1;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-canvas);
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+    /* Critical for nested flex scrolling/shrinking */
+}
+
+[dir="rtl"] .editor-column {
+    border-right: none;
+    border-left: 1px solid var(--border-color);
+}
+
+/* Controls Section */
+.se-controls-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-panel);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+/* Input Grid (New) */
+.se-input-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.se-input-wrapper {
+    position: relative;
+    padding-top: 15px;
+}
+
+.se-input-wrapper label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.se-input-wrapper input {
+    width: 100%;
+    text-align: center;
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.se-input-wrapper input:focus {
+    border-color: var(--primary-color);
+}
+
+/* Control Groups */
+.se-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.se-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.se-radio-group {
+    display: flex;
+    background: var(--bg-input);
+    padding: 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.se-radio {
+    cursor: pointer;
+    position: relative;
+}
+
+.se-radio input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.se-radio span {
+    display: block;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.se-radio input:checked+span {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 500;
+}
+
+.se-radio:hover span {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+
+/* Visual Editor Section */
+.editor-canvas-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+    /* Reduced padding to give more space */
+    min-height: 0;
+    /* Critical */
+}
+
+[data-theme='dark'] .editor-canvas-container {
+    background-image:
+        linear-gradient(45deg, #333 25%, transparent 25%),
+        linear-gradient(-45deg, #333 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #333 75%),
+        linear-gradient(-45deg, transparent 75%, #333 75%);
+}
+
+.editor-placeholder {
+    position: absolute;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+}
+
+.editor-canvas {
+    position: relative;
+    user-select: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    /* Constraint Logic: Fit within container but keep Aspect Ratio */
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    /* Helps perfectly wrap the image */
+}
+
+.editor-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    pointer-events: none;
+    width: auto;
+    /* Allow auto width based on height constraint */
+    height: auto;
+    /* Allow auto height based on width constraint */
+    object-fit: contain;
+}
+
+/* Green Guides */
+.guide-line {
+    position: absolute;
+    background: #00ff00;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    z-index: 100;
+    touch-action: none;
+}
+
+.guide-line::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    cursor: inherit;
+}
+
+.guide-line:hover {
+    background: #ccffcc;
+    cursor: grab;
+}
+
+.guide-line.dragging {
+    background: #ffffff;
+    cursor: grabbing;
+}
+
+.guide-h {
+    left: 0;
+    width: 100%;
+    height: 1px;
+    cursor: row-resize;
+}
+
+.guide-v {
+    top: 0;
+    height: 100%;
+    width: 1px;
+    cursor: col-resize;
+}
+
+/* Magnifier (New) */
+.se-magnifier {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    z-index: 200;
+    display: none;
+    background-color: var(--bg-canvas);
+    background-repeat: no-repeat;
+    /* Image will be set by JS via inline style */
+}
+
+/* Right Column: Preview */
+.preview-column {
+    width: 45%;
+    max-width: 600px;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background: var(--bg-panel-secondary);
+    border-left: 1px solid var(--border-color);
+}
+
+[dir="rtl"] .preview-column {
+    border-left: none;
+    border-right: 1px solid var(--border-color);
+}
+
+.preview-header {
+    height: 50px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+.preview-area {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    touch-action: none;
+    /* Crucial for Pan/Pinch */
+}
+
+[data-theme='dark'] .preview-area {
+    background-image:
+        linear-gradient(45deg, #333 25%, transparent 25%),
+        linear-gradient(-45deg, #333 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #333 75%),
+        linear-gradient(-45deg, transparent 75%, #333 75%);
+}
+
+#se-preview-world {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+}
+
+.preview-box {
+    width: 200px;
+    height: 150px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-style: solid;
+    /* Handles border-image magic */
+}
+
+/* Preview Box Handles */
+.se-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 1px solid var(--primary-color);
+    border-radius: 50%;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.se-handle.nw {
+    top: 0;
+    left: 0;
+    cursor: nwse-resize;
+}
+
+.se-handle.n {
+    top: 0;
+    left: 50%;
+    cursor: ns-resize;
+}
+
+.se-handle.ne {
+    top: 0;
+    left: 100%;
+    cursor: nesw-resize;
+}
+
+.se-handle.e {
+    top: 50%;
+    left: 100%;
+    cursor: ew-resize;
+}
+
+.se-handle.se {
+    top: 100%;
+    left: 100%;
+    cursor: nwse-resize;
+}
+
+.se-handle.s {
+    top: 100%;
+    left: 50%;
+    cursor: ns-resize;
+}
+
+.se-handle.sw {
+    top: 100%;
+    left: 0;
+    cursor: nesw-resize;
+}
+
+.se-handle.w {
+    top: 50%;
+    left: 0;
+    cursor: ew-resize;
+}
+
+.se-handle:hover {
+    background: var(--primary-color);
+    transform: translate(-50%, -50%) scale(1.3);
+}
